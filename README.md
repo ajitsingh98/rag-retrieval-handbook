@@ -77,7 +77,7 @@ HotpotQA significantly challenges state-of-the-art QA systems, making it an idea
 - Step 2: *Re-ranker(Slow and optional)* Cross encoder scores (query <-> chunk) to reorder top-n with finer semantics
 - Step 3: *Prompt Assembler* Select <= context_window tokens, interleave citations, maybe add system instructions
 - Step 4: *Generator* Any seq-to-seq or chat-LLM(eg. Llama-3-Instruct, Mixtral-8x7B, GPT-4)
-- Step 5: *Post-processor(Optional)* Extract structured answer, highlight sources and detect Hallucinations 
+- Step 5: *Post-processor(Optional)* Extract structured answer, highlight sources and detect Hallucinations
 
 **Key Interface Contract:**
 
@@ -110,6 +110,8 @@ HotpotQA significantly challenges state-of-the-art QA systems, making it an idea
     - Helpful-Harmless-Honest(HHH)
     - BLEU/ROUGE for summarization tasks
     - Hallucination Rate (Answer citing no retrieved snippet)
+
+### Hands-on: [Setting Closed-book Baseline](1_hands_on_setting_closed_book_baseline.ipynb)
 
 ## Classical Sparse Retrieval
 
