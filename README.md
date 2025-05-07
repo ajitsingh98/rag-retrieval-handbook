@@ -35,6 +35,7 @@ HotpotQA is a large-scale question answering dataset designed to support multi-h
 
 HotpotQA significantly challenges state-of-the-art QA systems, making it an ideal benchmark for evaluating retrieval and reasoning capabilities in RAG pipelines.
 
+---
 
 ## Why Retrieval at All?
 
@@ -113,8 +114,90 @@ HotpotQA significantly challenges state-of-the-art QA systems, making it an idea
 
 ### Hands-on: [Setting Closed-book Baseline](1_hands_on_setting_closed_book_baseline.ipynb)
 
+---
+
 ## Classical Sparse Retrieval
 
+**Outline**
+- Understand how term frequency / inverse document frequency (TF-IDF) scoring works
+- Derive and implement BM25 - the defacto standard sparse retriever 
+- Build and inverted index
+- Run top-k search on *HotpotQA* and measure Recall@k
+- Compare a BM25-augmented RAG System with closed-book baseline
+
+### Why Sparse
+
+- Each text chunk is encoded as a high dimensional sparse vector
+- One dimension per vocabulary term, mostly 0
+- Query - Document similarity is computed with a bag-of-words formula
+- No Semantics beyond lexical overlap
+
+**Pros**
+
+- Interpretable (You can see which words matched)
+- Cheap to build
+- Inverted index lives happily on disk
+- Sub-millisecond latency over million of docs (e.g. Elasticsearch, Lucene)
+
+**Cons**
+
+- No synonymy or paraphrase handling (Car != Automobile)
+- Tokenization matter
+    - Misspelling, morphology, multi-word expressions hurt
+- Pure lexical overlap is brittle for longer, noisier queries
+
+### The Math Behind TF-IDF to BM25
+
+Understanding the progression from TF-IDF to BM25 is essential in modern information retrieval (IR). Both aim to score how relevant a document is to a query, but BM25 improves upon TF-IDF by correcting some of its key limitations.
+
+**Notation Overview**
+
+Let’s define the notation used in both TF-IDF and BM25:
+
+- $q$ – a query, composed of terms ${t₁, t₂, ..., tₘ}$
+- $d$ – a document (or chunk of text)
+- $f(t, d)$ – frequency of term $t$ in document d (i.e., term frequency)
+- $|d|$ – length of document $d$ in words
+- $avgdl$ – average document length in the collection
+- $N$ – total number of documents in the corpus
+- $n(t)$ – number of documents that contain term $t$
+
+#### Classic TF-IDF (Cosine-Based)
+
+The TF-IDF score reflects how important a word is to a document, relative to a collection of documents. The simplest formulation is:
+
+*Term Weighting:*
+
+$$
+weight(t,d) = f(t,d).\log(\frac{N}{n(t)})
+$$
+
+*Document Score:*
+
+$$
+score(q,d) = \sum_{t \epsilon q}weight(t,d)
+$$
+
+This means we sum the importance (weight) of each query term $t$ in the document.
+
+**Limitations of Classic TF-IDF**
+
+- Linear term frequency(TF): The more a term appears, the higher its score - even if it's spammy
+- No length normalization: Long documents naturally have more terms, unfairly boosting their scores
+- No Probabilistic basis: TF-IDF does not explicitly model how likely a term is to appear in relevant vs non-relevant documents
+
+#### Okapi BM25
+
+BM25 (Best Matching 25) is a ranking function built on a probabilistic retrieval framework. It fizes TF-IDF's flaws by introducing term frequency saturation and document length normalization.
+
+*Scoring Function*
+
+$$
+score(q, d) = \sum_{t \epsilon q}IDF(t) . \frac{f(t,d).(k_1 + 1)}{f(t,d)+k_1 . (1 - b + b . \frac{|d|}{avgdl})}
+$$
+
+
+---
 
 ## Dense Retrieval
 
