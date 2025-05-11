@@ -229,17 +229,138 @@ Inverted index = hashmap term -> posting list [(doc_id, f(t, d)),..]
 
 With proper caching and compression (Delta + VarByte), Lucene handles $>10^9$ docs
 
+### Scaling beyond RAM
+
+- **Elasticsearch/OpenSearch:** BM25 implemented as Lucene Similarity. Horizontal sharding + replicas > 1Bn docs per cluster is common
+- **Index size heuristic:** Compressed posting 
+- **Query latency tuning:** Pre-computed term statistics, field norm caching, in-memory hot shard tier
+
 ### Hands-on: [Sparse retrieval - BM25 on HotpotQA](2_sparse_retrieval_bm25_on_hotpotqa.ipynb)
 
 ---
 
 ## Dense Retrieval
 
+**Outline**
+
+- Lexical-match retrieval vs Dense semantic retrieval 
+- Understanding the Bi-Encoder architecture - Contrastive Training and Similarity Scoring
+- Build, store and query a FAISS index (Exact and Approximate)
+- Measure quality, speed and memory vs BM25 system
+- Tunable parameters: Model choice, pooling, quantization, ANN parameters
+
+### Issues with Sparse retrieval
+
+- **Synonymy and Morphology:** Unable to handle different word forms ("run" vs "running") or synonyms efficiently 
+- **Long Multi-hop Queries:** Often retrieves insufficient data for complex, multi-step questions
+- **Rare Entities:** Struggle with terms or entries thar are rare or unseen in the corpus
+- **Context and Semantics:** Fails to understand the broader context and semantics of queries
+- **Positional Context:** Lack sensitivity to the positional importance importance of terms within documents
+
+These limitations point directly at dense semantic embeddings.
+
+### Why Dense Retrieval?
+
+- Problem 1: Vocabulary mismatch
+    - "car" vs "automobile", "COVID" vs "Coronavirus", BM25 cannot match zero overlap tokens
+- Problem 2: Semantic Ranking
+    - Even if overlap exists, BM25 can not tell "Apollo 11 commander" from "Apollo 11 launch date"
+
+Neural sentence embeddings map texts into $$R^d$$ such that semantically related pairs have high dot / cosine similarity. This helps in improving recall by significant margin wrt BM25 retrieval Methodology.
+
+### Bi-Encoder Fundamentals 
+
+Bi-encoders are neural network models used for tasks like retrieval and reranking by encoding both queries and documents into fixed-length vectors and then calculating their similarity using dot product or cosine similarity.
+
+**Architecture**
+
+<table align='center'>
+  <tr>
+    <td align="center">
+      <img src="img/biencoder_architecture.png" alt= "Bi-Encoder Architecture" style="max-width:70%;" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"> Bi-Encoder Architecture </td>
+  </tr>
+</table>
+
+*Components*
+
+- Query Encoder and Document Encoder
+    - Both the query and document are passed through their respective encoders
+    - In many implementations, the weights are tied, meaning the same transformer model is used to encode both the query and the passage 
+- Output
+    - Each encoder output a single fixed-length vector for the query and document, typically with a dimensionality of $786$ for models like BERT-base
+- Relevance Score
+    - The relevance score is computed using a dot product or cosine similarity between the encoded vectors of the query and document 
+
+**Training Signal:**
+
+    - Objective : Bring together positives, and push away negatives
+    - The loss function used is Multiple-Negative Ranking, which for a mini-batch of size(b) is calculated as:
+        - $$Sim = \frac{q_{i} \dot d_{j}}{\tau}$$
+        - Apply softmax over $j$
+        - Loss: $$\text{Loss} = - \text{mean} \log{p(j=i)}$$
+
+
+
+**Similarity Choice**
+
+- Cosine Similarity: Measures similarity by computing the cosine angle between two vectors. It is equivalent to a dot product between L2-normalized vectors
+- Inner Product Similarity: Used if vectors are centered during training, without normalization
+
+**Pooling**
+
+- [CLS] Token: By default, the [CLS] token's representation is used for encoding
+- Mean Pooling: Averaging the token representations across the sequence. This can slightly improve the robustness of the model by capturing more contextual information
+
+### ANN Search with FAISS
+
+FAISS or Facebook AI Similarity Search, is a library for efficient similarity search and clustering of dense vectors. It is widely used in scenarios where there is a need to search through vast quantity of data very quickly.
+
+**Exact search**
+
+- Techniques: `IndexFlatIP` (Inner Product) / `IndexFlatL2` (Euclidean Distance)
+    - Computational Requirement: Involves one matrix multiplication 
+    - Memory Requirement: RAM usages is proportional to `#docs x embedding dim x size of each float`
+
+**Approximate Search**
+- `IVF (Inverted File Index)`: Uses a coarse quantizer followed by inverted lists of efficient search 
+    - Advantages: Significant speed gains when working with large datasets (>= 1M Documents)
+
+- `HNSW(Hierarchical Navigable Small World Graph)`: Employs a graph-based approach 
+    - Advantages: Offers strong recall and low search latency and relatively easy to fine-tune
+
+**Quantization**
+
+- `float16 Quantization`
+    - Objective: Reduces RAM usage by Half
+    - FAISS Support: FAISS can handle `float16` to optimize memory usages
+
+- `Product Quantization`
+    - Objective: Compresses vector data, typically reducing size by factor of 8-16
+    - Trade-off: This compression comes at the cost of reduced recall accuracy 
+
+### Hands-on: [Dense Passage Retrieval](3_dense_retrieval_on_hotpotqa.ipynb)
+
+### Strength over BM25
+
+- Big jump in synonym / paraphrase questions ("father", "dad", "parent of")
+- Longer, complex queries tolerated 
+- Language agnostic: Multilingual checkpoints allow bi-encoder models to perform cross-lingual question answering.
+
+### Limitation of dense retrieval
+
+- Proper names unseen in pre-training - Rare entities may collapse 
+- Computation cost when building index (transformer pass over whole corpus)
+- Exact phrase constraints ("start with", "spelling") worse than BM25
+
 
 ## Hybrid Retrieval
 
 
-## Reranking with Cross Encoders
+## Re-ranking with Cross Encoders
 
 
 ## Query Expansion and Self-Query
