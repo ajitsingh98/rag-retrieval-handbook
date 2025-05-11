@@ -196,6 +196,40 @@ $$
 score(q, d) = \sum_{t \epsilon q}IDF(t) . \frac{f(t,d).(k_1 + 1)}{f(t,d)+k_1 . (1 - b + b . \frac{|d|}{avgdl})}
 $$
 
+where
+
+$$IDF(t) = \log((N - n(t) + 0.5) / (n(t)+0.5) + 1)$$
+
+$$k_1 \epsilon [1.2, 2.0]$$ controls TF saturation 
+
+$$b \epsilon [0, 1]$$ controls length normalization (b = 0 -> none; b=1 -> full)
+
+Most IR systems default to $k_1=1.5, b=0.75$
+
+**Why BM25 usually wins over vanilla TF-IDF**
+
+- TF saturation stops spammy word stuffing
+- Length normalization prevents long docs dominating 
+- Probabilistic IDF is numerically stabler for rare and common terms 
+
+### Building an Inverted Index 
+
+Inverted index = hashmap term -> posting list [(doc_id, f(t, d)),..]
+
+**At query time:**
+
+1. Tokenise query -> terms 
+2. For each term, pull posting list 
+3. Union doc_ids, compute BM25 score, keep top-k
+
+**Complexities**
+
+- Build time: $O(total tokens)$
+- Query time: O(#unique query terms $\dot$ avg posting length)
+
+With proper caching and compression (Delta + VarByte), Lucene handles $>10^9$ docs
+
+### Hands-on: [Sparse retrieval - BM25 on HotpotQA](2_sparse_retrieval_bm25_on_hotpotqa.ipynb)
 
 ---
 
