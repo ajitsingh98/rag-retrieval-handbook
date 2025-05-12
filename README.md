@@ -114,6 +114,11 @@ HotpotQA significantly challenges state-of-the-art QA systems, making it an idea
 
 ### Hands-on: [Setting Closed-book Baseline](1_hands_on_setting_closed_book_baseline.ipynb)
 
+### Suggested Read
+
+- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/pdf/2005.11401)
+- [Measuring and Narrowing the Compositionality Gap in Language Models](https://arxiv.org/pdf/2210.03350)
+
 ---
 
 ## Classical Sparse Retrieval
@@ -237,6 +242,12 @@ With proper caching and compression (Delta + VarByte), Lucene handles $>10^9$ do
 
 ### Hands-on: [Sparse retrieval - BM25 on HotpotQA](2_sparse_retrieval_bm25_on_hotpotqa.ipynb)
 
+### Suggested Read
+
+- [The Probabilistic Relevance Framework: BM25 and Beyond](https://www.staff.city.ac.uk/~sbrp622/papers/foundations_bm25_review.pdf1)
+- [Introduction to Information Retrieval](https://nlp.stanford.edu/IR-book/information-retrieval-book.html)
+
+
 ---
 
 ## Dense Retrieval
@@ -356,24 +367,60 @@ FAISS or Facebook AI Similarity Search, is a library for efficient similarity se
 - Computation cost when building index (transformer pass over whole corpus)
 - Exact phrase constraints ("start with", "spelling") worse than BM25
 
+### Suggested Read
+
+- [Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/pdf/2004.04906)
+- [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084)
+- [Faiss (Facebook AI Similarity Search)](https://ai.meta.com/tools/faiss/)
+
+---
 
 ## Hybrid Retrieval
 
+---
 
 ## Re-ranking with Cross Encoders
 
+---
 
 ## Query Expansion and Self-Query
 
+---
 
 ## Multi-hop Retrieval
 
+---
 
 ## Evaluating Retriever in Isolation and In RAG
 
+---
 
 ## Fine-Tuning Your Own Retriever
 
+---
 
 ## Scaling and Deployment
 
+---
+
+## Self-check Quiz
+
+Q1. Name three reasons why hallucinations occur more often in closed-book LLMs.
+
+Q2. In a RAG pipeline, which component is primarily responsible for precision and which for recall?
+
+Q3. Why does increasing an LLM's context window not fully solve the knowledge freshness problem?
+
+Q4. Explain why BM25 uses a long-scaled IDF instead of raw $N/n(t)$?
+
+Q5. What happens when b=0 in the BM25 formula?
+
+Q6. Suggests two reasons why Recall@k keeps improving as $k$ grows but EM stalls after a point.
+
+Q7. Why does in-batch negative sampling make Bi-Encoder training efficient?
+
+Q8. Give two reasons to normalise embeddings before FAISS dot-product search.
+
+Q9. For a 10 M-document corpus, which FAISS index would you start with and why?
+
+---
